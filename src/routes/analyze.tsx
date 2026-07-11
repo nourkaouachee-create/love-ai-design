@@ -183,7 +183,7 @@ function AnalyzePage() {
                         <div className="mt-2 h-2 w-full overflow-hidden rounded-full bg-lavender-soft/60">
                           <div
                             className="h-full rounded-full bg-gradient-primary transition-all duration-1000 ease-out"
-                            style={{ width: `${Math.min(result.score, 100)}%` }}
+                            style={{ width: `${Math.min(result.score ?? 0, 100)}%` }}
                           />
                         </div>
                       </div>
