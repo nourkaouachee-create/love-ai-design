@@ -11,14 +11,14 @@ export const Route = createFileRoute("/")({
   component: HomePage,
 });
 
-const features = [
+const features: { emoji: string; title: string; tag?: string }[] = [
   { emoji: "❤️", title: "Compatibility Test", tag: "Premium" },
   { emoji: "💬", title: "Conversation Analyzer" },
   { emoji: "🚩", title: "Red & Green Flags" },
   { emoji: "📚", title: "Articles & Tips" },
   { emoji: "🎯", title: "Daily Challenge" },
   { emoji: "📓", title: "Relationship Journal" },
-] as const;
+];
 
 const articles = [
   {
