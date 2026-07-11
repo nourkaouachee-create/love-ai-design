@@ -1,24 +1,32 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { Bell, Sparkles } from "lucide-react";
+import { MobileShell } from "@/components/layout/mobile-shell";
+import { PageHeader } from "@/components/layout/page-header";
+import { EmptyState } from "@/components/layout/empty-state";
+import { Button } from "@/components/ui/button";
 
-// No head() here: the home route inherits title/description/og/twitter from
-// __root.tsx, and ships no og:image so serve-time hosting can inject the
-// project's social preview (explicit og:image or latest screenshot).
 export const Route = createFileRoute("/")({
-  component: Index,
+  component: HomePage,
 });
 
-// IMPORTANT: Replace this placeholder. See ./README.md for routing conventions.
-function Index() {
+function HomePage() {
   return (
-    <div
-      className="flex min-h-screen items-center justify-center"
-      style={{ backgroundColor: "#fcfbf8" }}
-    >
-      <img
-        data-lovable-blank-page-placeholder="REMOVE_THIS"
-        src="https://cdn.gpteng.co/blank-app-v1.svg"
-        alt="Your app will live here!"
+    <MobileShell>
+      <PageHeader
+        eyebrow="Welcome back"
+        title="Love AI"
+        subtitle="Your calm, intelligent companion — designed with care."
+        action={
+          <Button variant="outline" size="icon" aria-label="Notifications">
+            <Bell />
+          </Button>
+        }
       />
-    </div>
+      <EmptyState
+        icon={Sparkles}
+        title="Your journey starts here"
+        description="This is the foundation of Love AI. Screens will come alive as we build features together."
+      />
+    </MobileShell>
   );
 }
