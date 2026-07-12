@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as ProfileRouteImport } from './routes/profile'
 import { Route as CompatibilityRouteImport } from './routes/compatibility'
+import { Route as ChatHistoryRouteImport } from './routes/chat-history'
 import { Route as ChatRouteImport } from './routes/chat'
 import { Route as AnalyzeRouteImport } from './routes/analyze'
 import { Route as IndexRouteImport } from './routes/index'
@@ -23,6 +24,11 @@ const ProfileRoute = ProfileRouteImport.update({
 const CompatibilityRoute = CompatibilityRouteImport.update({
   id: '/compatibility',
   path: '/compatibility',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ChatHistoryRoute = ChatHistoryRouteImport.update({
+  id: '/chat-history',
+  path: '/chat-history',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ChatRoute = ChatRouteImport.update({
@@ -45,6 +51,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/analyze': typeof AnalyzeRoute
   '/chat': typeof ChatRoute
+  '/chat-history': typeof ChatHistoryRoute
   '/compatibility': typeof CompatibilityRoute
   '/profile': typeof ProfileRoute
 }
@@ -52,6 +59,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/analyze': typeof AnalyzeRoute
   '/chat': typeof ChatRoute
+  '/chat-history': typeof ChatHistoryRoute
   '/compatibility': typeof CompatibilityRoute
   '/profile': typeof ProfileRoute
 }
@@ -60,21 +68,42 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/analyze': typeof AnalyzeRoute
   '/chat': typeof ChatRoute
+  '/chat-history': typeof ChatHistoryRoute
   '/compatibility': typeof CompatibilityRoute
   '/profile': typeof ProfileRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/analyze' | '/chat' | '/compatibility' | '/profile'
+  fullPaths:
+    | '/'
+    | '/analyze'
+    | '/chat'
+    | '/chat-history'
+    | '/compatibility'
+    | '/profile'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/analyze' | '/chat' | '/compatibility' | '/profile'
-  id: '__root__' | '/' | '/analyze' | '/chat' | '/compatibility' | '/profile'
+  to:
+    | '/'
+    | '/analyze'
+    | '/chat'
+    | '/chat-history'
+    | '/compatibility'
+    | '/profile'
+  id:
+    | '__root__'
+    | '/'
+    | '/analyze'
+    | '/chat'
+    | '/chat-history'
+    | '/compatibility'
+    | '/profile'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AnalyzeRoute: typeof AnalyzeRoute
   ChatRoute: typeof ChatRoute
+  ChatHistoryRoute: typeof ChatHistoryRoute
   CompatibilityRoute: typeof CompatibilityRoute
   ProfileRoute: typeof ProfileRoute
 }
@@ -93,6 +122,13 @@ declare module '@tanstack/react-router' {
       path: '/compatibility'
       fullPath: '/compatibility'
       preLoaderRoute: typeof CompatibilityRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/chat-history': {
+      id: '/chat-history'
+      path: '/chat-history'
+      fullPath: '/chat-history'
+      preLoaderRoute: typeof ChatHistoryRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/chat': {
@@ -123,6 +159,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AnalyzeRoute: AnalyzeRoute,
   ChatRoute: ChatRoute,
+  ChatHistoryRoute: ChatHistoryRoute,
   CompatibilityRoute: CompatibilityRoute,
   ProfileRoute: ProfileRoute,
 }
