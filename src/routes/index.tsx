@@ -11,9 +11,10 @@ export const Route = createFileRoute("/")({
   component: HomePage,
 });
 
-const features: { emoji: string; title: string; tag?: string }[] = [
-  { emoji: "❤️", title: "Compatibility Test", tag: "Premium" },
-  { emoji: "💬", title: "Conversation Analyzer" },
+type FeatureRoute = "/compatibility" | "/analyze" | "/chat" | "/profile";
+const features: { emoji: string; title: string; tag?: string; to?: FeatureRoute }[] = [
+  { emoji: "❤️", title: "Compatibility Test", tag: "Premium", to: "/compatibility" },
+  { emoji: "💬", title: "Conversation Analyzer", to: "/analyze" },
   { emoji: "🚩", title: "Red & Green Flags" },
   { emoji: "📚", title: "Articles & Tips" },
   { emoji: "🎯", title: "Daily Challenge" },
@@ -100,25 +101,34 @@ function HomePage() {
           <span className="text-xs text-muted-foreground">6 tools</span>
         </div>
         <div className="grid grid-cols-2 gap-3">
-          {features.map((f) => (
-            <button
-              key={f.title}
-              type="button"
-              className="group relative overflow-hidden rounded-3xl border border-white/70 bg-gradient-card p-4 text-left shadow-soft backdrop-blur transition-all duration-300 hover:-translate-y-0.5 hover:shadow-elegant active:scale-[0.98]"
-            >
-              <div className="flex size-11 items-center justify-center rounded-2xl bg-white text-2xl shadow-soft ring-1 ring-lavender-soft">
-                <span aria-hidden>{f.emoji}</span>
-              </div>
-              <p className="mt-4 text-sm font-semibold leading-snug text-foreground">
-                {f.title}
-              </p>
-              {f.tag && (
-                <span className="mt-2 inline-flex rounded-full bg-accent px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-accent-foreground">
-                  {f.tag}
-                </span>
-              )}
-            </button>
-          ))}
+          {features.map((f) => {
+            const cardClass =
+              "group relative overflow-hidden rounded-3xl border border-white/70 bg-gradient-card p-4 text-left shadow-soft backdrop-blur transition-all duration-300 hover:-translate-y-0.5 hover:shadow-elegant active:scale-[0.98]";
+            const inner = (
+              <>
+                <div className="flex size-11 items-center justify-center rounded-2xl bg-white text-2xl shadow-soft ring-1 ring-lavender-soft">
+                  <span aria-hidden>{f.emoji}</span>
+                </div>
+                <p className="mt-4 text-sm font-semibold leading-snug text-foreground">
+                  {f.title}
+                </p>
+                {f.tag && (
+                  <span className="mt-2 inline-flex rounded-full bg-accent px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-accent-foreground">
+                    {f.tag}
+                  </span>
+                )}
+              </>
+            );
+            return f.to ? (
+              <Link key={f.title} to={f.to} className={cardClass}>
+                {inner}
+              </Link>
+            ) : (
+              <button key={f.title} type="button" className={cardClass}>
+                {inner}
+              </button>
+            );
+          })}
         </div>
       </section>
 
