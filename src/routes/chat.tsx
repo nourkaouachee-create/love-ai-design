@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { createFileRoute, useRouter } from "@tanstack/react-router";
+import { createFileRoute, Link, useRouter } from "@tanstack/react-router";
 import {
   ArrowLeft,
   MoreHorizontal,
@@ -144,9 +144,11 @@ function ChatPage() {
                 align="end"
                 className="w-56 rounded-2xl border-white/70 bg-white/95 p-1.5 shadow-elegant backdrop-blur-xl"
               >
-                <DropdownMenuItem className="rounded-xl">
-                  <History className="size-4" />
-                  Chat History
+                <DropdownMenuItem asChild className="rounded-xl">
+                  <Link to="/chat-history">
+                    <History className="size-4" />
+                    Chat History
+                  </Link>
                 </DropdownMenuItem>
                 <DropdownMenuItem className="rounded-xl" onSelect={reset}>
                   <Trash2 className="size-4" />
