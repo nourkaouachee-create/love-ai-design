@@ -4,15 +4,15 @@ import { getFirestore, type Firestore } from "firebase/firestore";
 import { getStorage, type FirebaseStorage } from "firebase/storage";
 
 // Firebase web config values are publishable (safe in client code).
-// The API key is read from VITE_FIREBASE_API_KEY so it can be swapped per environment.
+// They are injected by Lovable Secrets as VITE_* environment variables.
 export const firebaseConfig = {
   apiKey: import.meta.env.VITE_FIREBASE_API_KEY as string,
-  authDomain: "love-ai-b5e26.firebaseapp.com",
-  projectId: "love-ai-b5e26",
-  storageBucket: "love-ai-b5e26.firebasestorage.app",
-  messagingSenderId: "1036722506034",
-  appId: "1:1036722506034:web:5c53de2fa54ae5df79ef2b",
-  measurementId: "G-LM2NWDXXFS",
+  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN as string,
+  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID as string,
+  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET as string,
+  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID as string,
+  appId: import.meta.env.VITE_FIREBASE_APP_ID as string,
+  measurementId: (import.meta.env.VITE_FIREBASE_MEASUREMENT_ID as string | undefined) ?? "G-LM2NWDXXFS",
 };
 
 // Lazy singletons: nothing initializes during SSR, only on first browser use.
