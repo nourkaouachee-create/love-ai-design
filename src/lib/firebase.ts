@@ -15,7 +15,19 @@ export const firebaseConfig = {
   measurementId: "G-LM2NWDXXFS",
 };
 
-export const app: FirebaseApp = getApps().length ? getApp() : initializeApp(firebaseConfig);
-export const auth: Auth = getAuth(app);
-export const db: Firestore = getFirestore(app);
-export const storage: FirebaseStorage = getStorage(app);
+// Lazy singletons: nothing initializes during SSR, only on first browser use.
+export function getFirebaseApp(): FirebaseApp {
+  return getApps().length ? getApp() : initializeApp(firebaseConfig);
+}
+
+export function getFirebaseAuth(): Auth {
+  return getAuth(getFirebaseApp());
+}
+
+export function getDb(): Firestore {
+  return getFirestore(getFirebaseApp());
+}
+
+export function getFirebaseStorage(): FirebaseStorage {
+  return getStorage(getFirebaseApp());
+}
