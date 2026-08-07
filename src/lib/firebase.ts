@@ -6,7 +6,7 @@ import { getStorage, type FirebaseStorage } from "firebase/storage";
 // Firebase web config values are publishable (safe in client code).
 // TODO: migrate to VITE_* env vars later.
 // 👇 Paste your Firebase Web API key here (from Firebase Console → Project settings → General → Your apps).
-const FIREBASE_API_KEY = "PASTE_YOUR_FIREBASE_WEB_API_KEY_HERE";
+const FIREBASE_API_KEY = "AIzaSyC25_myzSkpjkYaR28RA0CmqfJzHiGI8rQ";
 
 export const firebaseConfig = {
   apiKey: FIREBASE_API_KEY,
