@@ -4,15 +4,18 @@ import { getFirestore, type Firestore } from "firebase/firestore";
 import { getStorage, type FirebaseStorage } from "firebase/storage";
 
 // Firebase web config values are publishable (safe in client code).
-// They are injected by Lovable Secrets as VITE_* environment variables.
+// TODO: migrate to VITE_* env vars later.
+// 👇 Paste your Firebase Web API key here (from Firebase Console → Project settings → General → Your apps).
+const FIREBASE_API_KEY = "PASTE_YOUR_FIREBASE_WEB_API_KEY_HERE";
+
 export const firebaseConfig = {
-  apiKey: import.meta.env.VITE_FIREBASE_API_KEY as string,
-  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN as string,
-  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID as string,
-  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET as string,
-  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID as string,
-  appId: import.meta.env.VITE_FIREBASE_APP_ID as string,
-  measurementId: (import.meta.env.VITE_FIREBASE_MEASUREMENT_ID as string | undefined) ?? "G-LM2NWDXXFS",
+  apiKey: FIREBASE_API_KEY,
+  authDomain: "love-ai-b5e26.firebaseapp.com",
+  projectId: "love-ai-b5e26",
+  storageBucket: "love-ai-b5e26.firebasestorage.app",
+  messagingSenderId: "1036722506034",
+  appId: "1:1036722506034:web:5c53de2fa54ae5df79ef2b",
+  measurementId: "G-LM2NWDXXFS",
 };
 
 // Lazy singletons: nothing initializes during SSR, only on first browser use.
