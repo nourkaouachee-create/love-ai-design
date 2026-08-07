@@ -14,6 +14,7 @@ export type MessageRole = "user" | "assistant" | "system";
 
 /** users/{uid} */
 export interface UserDoc {
+  uid: string;
   displayName: string | null;
   email: string | null;
   photoURL: string | null;
@@ -44,7 +45,7 @@ export interface MessageDoc {
 }
 
 export const defaultUserDoc = (
-  params: Pick<UserDoc, "displayName" | "email" | "photoURL">,
+  params: Pick<UserDoc, "uid" | "displayName" | "email" | "photoURL">,
 ): Omit<UserDoc, "createdAt"> => ({
   ...params,
   language: "en",

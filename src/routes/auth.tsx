@@ -1,6 +1,8 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
-import { Apple, Mail, UserRound } from "lucide-react";
+import { useState } from "react";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { Apple, Loader2, Mail, UserRound } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useAuth } from "@/hooks/use-auth";
 import pixelHeart from "@/assets/pixel-heart.png";
 
 export const Route = createFileRoute("/auth")({
@@ -19,6 +21,51 @@ function GoogleIcon({ className }: { className?: string }) {
 }
 
 function AuthPage() {
+  const navigate = useNavigate();
+  const { signInWithGoogle, signInWithEmail, signUpWithEmail, signInAsGuest } = useAuth();
+  const [busy, setBusy] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [emailOpen, setEmailOpen] = useState(false);
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+
+  const run = async (key: string, fn: () => Promise<void>) => {
+    setBusy(key);
+    setError(null);
+    try {
+      await fn();
+      navigate({ to: "/" });
+    } catch (e) {
+      const err = e as { code?: string; message?: string };
+      setError(err.code ? `${err.code}: ${err.message ?? ""}`.trim() : (err.message ?? "Sign-in failed"));
+    } finally {
+      setBusy(null);
+    }
+  };
+
+  const submitEmail = () =>
+    run("email", async () => {
+      try {
+        await signInWithEmail(email, password);
+      } catch (e) {
+        const code = (e as { code?: string }).code;
+        // Firebase returns invalid-credential for unknown accounts when
+        // email-enumeration protection is on, so try creating the account.
+        if (code === "auth/user-not-found" || code === "auth/invalid-credential") {
+          try {
+            await signUpWithEmail(email, password);
+          } catch (e2) {
+            if ((e2 as { code?: string }).code === "auth/email-already-in-use") {
+              throw new Error("Incorrect password for this email.");
+            }
+            throw e2;
+          }
+        } else {
+          throw e;
+        }
+      }
+    });
+
   return (
     <div className="relative min-h-screen overflow-hidden bg-gradient-hero">
       <div className="pointer-events-none absolute inset-0">
@@ -41,35 +88,65 @@ function AuthPage() {
 
         <div className="mt-12 flex flex-col gap-3 animate-fade-in [animation-delay:150ms]">
           <Button
-            asChild
             variant="outline"
+            disabled={busy !== null}
+            onClick={() => run("google", signInWithGoogle)}
             className="h-14 rounded-2xl border-border/70 bg-white/80 text-[15px] font-semibold text-foreground shadow-soft backdrop-blur-xl hover:bg-white"
           >
-            <Link to="/">
+            {busy === "google" ? (
+              <Loader2 className="mr-1 size-5 animate-spin" />
+            ) : (
               <GoogleIcon className="mr-1 size-5" />
-              Continue with Google
-            </Link>
+            )}
+            Continue with Google
           </Button>
 
           <Button
-            asChild
+            disabled={busy !== null}
+            onClick={() => setError("Apple Sign-In is not enabled yet.")}
             className="h-14 rounded-2xl bg-foreground text-[15px] font-semibold text-background shadow-soft hover:bg-foreground/90"
           >
-            <Link to="/">
-              <Apple className="mr-1 size-5" />
-              Continue with Apple
-            </Link>
+            <Apple className="mr-1 size-5" />
+            Continue with Apple
           </Button>
 
           <Button
-            asChild
+            disabled={busy !== null}
+            onClick={() => setEmailOpen((v) => !v)}
             className="h-14 rounded-2xl bg-gradient-primary text-[15px] font-semibold text-white shadow-elegant hover:opacity-95"
           >
-            <Link to="/">
-              <Mail className="mr-1 size-5" />
-              Continue with Email
-            </Link>
+            <Mail className="mr-1 size-5" />
+            Continue with Email
           </Button>
+
+          {emailOpen && (
+            <div className="flex flex-col gap-3 rounded-2xl bg-white/80 p-4 shadow-soft backdrop-blur-xl animate-fade-in">
+              <input
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="Email"
+                autoComplete="email"
+                className="h-12 rounded-xl border border-border/70 bg-white px-4 text-[15px] text-foreground outline-none placeholder:text-muted-foreground focus:border-primary"
+              />
+              <input
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="Password"
+                autoComplete="current-password"
+                className="h-12 rounded-xl border border-border/70 bg-white px-4 text-[15px] text-foreground outline-none placeholder:text-muted-foreground focus:border-primary"
+              />
+              <Button
+                disabled={busy !== null || !email || password.length < 6}
+                onClick={submitEmail}
+                className="h-12 rounded-xl bg-gradient-primary text-[15px] font-semibold text-white shadow-elegant hover:opacity-95"
+              >
+                {busy === "email" && <Loader2 className="mr-1 size-4 animate-spin" />}
+                Continue
+              </Button>
+            </div>
+          )}
 
           <div className="my-2 flex items-center gap-3">
             <span className="h-px flex-1 bg-border/70" />
@@ -80,15 +157,24 @@ function AuthPage() {
           </div>
 
           <Button
-            asChild
             variant="ghost"
+            disabled={busy !== null}
+            onClick={() => run("guest", signInAsGuest)}
             className="h-12 rounded-2xl text-[14px] font-medium text-muted-foreground hover:bg-white/60 hover:text-foreground"
           >
-            <Link to="/">
+            {busy === "guest" ? (
+              <Loader2 className="mr-1 size-4 animate-spin" />
+            ) : (
               <UserRound className="mr-1 size-4" />
-              Continue as Guest
-            </Link>
+            )}
+            Continue as Guest
           </Button>
+
+          {error && (
+            <p className="rounded-xl bg-destructive/10 px-4 py-3 text-center text-[13px] text-destructive">
+              {error}
+            </p>
+          )}
         </div>
 
         <div className="mt-auto pb-[max(2rem,env(safe-area-inset-bottom))] pt-10">

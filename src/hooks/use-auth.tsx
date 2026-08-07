@@ -38,6 +38,7 @@ async function ensureUserDoc(user: User) {
   if (snap.exists()) return;
   await setDoc(ref, {
     ...defaultUserDoc({
+      uid: user.uid,
       displayName: user.displayName,
       email: user.email,
       photoURL: user.photoURL,
