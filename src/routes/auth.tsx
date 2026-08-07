@@ -48,8 +48,18 @@ function AuthPage() {
       try {
         await signInWithEmail(email, password);
       } catch (e) {
-        if ((e as { code?: string }).code === "auth/user-not-found") {
-          await signUpWithEmail(email, password);
+        const code = (e as { code?: string }).code;
+        // Firebase returns invalid-credential for unknown accounts when
+        // email-enumeration protection is on, so try creating the account.
+        if (code === "auth/user-not-found" || code === "auth/invalid-credential") {
+          try {
+            await signUpWithEmail(email, password);
+          } catch (e2) {
+            if ((e2 as { code?: string }).code === "auth/email-already-in-use") {
+              throw new Error("Incorrect password for this email.");
+            }
+            throw e2;
+          }
         } else {
           throw e;
         }
