@@ -391,6 +391,17 @@ function ChatPage() {
 }
 
 function TypingDots() {
+  return <TypingDotsInner />;
+}
+
+function readableError(e: unknown): string {
+  const err = e as { code?: string; message?: string };
+  if (err?.code === "permission-denied")
+    return "You don't have access to this conversation.";
+  return err?.code ?? err?.message ?? "Something went wrong. Please try again.";
+}
+
+function TypingDotsInner() {
   return (
     <div className="flex items-center gap-1.5 py-0.5" aria-label="Love AI is typing">
       {[0, 1, 2].map((i) => (
