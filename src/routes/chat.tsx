@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { createFileRoute, Link, useRouter } from "@tanstack/react-router";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { createFileRoute, Link, useNavigate, useRouter } from "@tanstack/react-router";
 import {
   ArrowLeft,
   MoreHorizontal,
@@ -26,8 +26,18 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
 import pixelHeart from "@/assets/pixel-heart.png";
+import { useAuth } from "@/hooks/use-auth";
+import {
+  addMessage,
+  createConversation,
+  listMessages,
+  titleFromMessage,
+} from "@/lib/chat-store";
 
 export const Route = createFileRoute("/chat")({
+  validateSearch: (search: Record<string, unknown>) => ({
+    c: typeof search.c === "string" && search.c ? search.c : undefined,
+  }),
   head: () => ({
     meta: [
       { title: "Chat — Love AI" },
@@ -65,36 +75,112 @@ const suggestions = [
 
 function ChatPage() {
   const router = useRouter();
+  const navigate = useNavigate();
+  const { c: conversationId } = Route.useSearch();
+  const { user, loading: authLoading } = useAuth();
   const [messages, setMessages] = useState<ChatMessage[]>(initialMessages);
   const [input, setInput] = useState("");
   const [isTyping, setIsTyping] = useState(false);
+  const [loadingHistory, setLoadingHistory] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const convIdRef = useRef<string | undefined>(conversationId);
 
-  const send = (text: string) => {
-    const value = text.trim();
-    if (!value) return;
-    setMessages((m) => [
-      ...m,
-      { id: crypto.randomUUID(), role: "user", content: value },
-    ]);
-    setInput("");
-    setIsTyping(true);
-    // UI-only: fake typing indicator then a placeholder reply
-    window.setTimeout(() => {
+  useEffect(() => {
+    convIdRef.current = conversationId;
+  }, [conversationId]);
+
+  // Load an existing conversation's messages from Firestore.
+  useEffect(() => {
+    let cancelled = false;
+    if (!conversationId || !user) {
+      if (!conversationId) setMessages(initialMessages);
+      return;
+    }
+    setLoadingHistory(true);
+    setError(null);
+    listMessages(conversationId)
+      .then((stored) => {
+        if (cancelled) return;
+        setMessages([
+          ...initialMessages,
+          ...stored
+            .filter((m) => m.role !== "system")
+            .map((m) => ({
+              id: m.id,
+              role: m.role as "user" | "assistant",
+              content: m.content,
+            })),
+        ]);
+      })
+      .catch((e: unknown) => {
+        if (!cancelled) setError(readableError(e));
+      })
+      .finally(() => {
+        if (!cancelled) setLoadingHistory(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [conversationId, user]);
+
+  const send = useCallback(
+    async (text: string) => {
+      const value = text.trim();
+      if (!value) return;
       setMessages((m) => [
         ...m,
-        {
-          id: crypto.randomUUID(),
-          role: "assistant",
-          content:
-            "Thank you for sharing. I'm here to listen — this is a placeholder response while we build the AI.",
-        },
+        { id: crypto.randomUUID(), role: "user", content: value },
+      ]);
+      setInput("");
+      setIsTyping(true);
+      setError(null);
+
+      const reply =
+        "Thank you for sharing. I'm here to listen — this is a placeholder response while we build the AI.";
+
+      try {
+        if (user) {
+          let id = convIdRef.current;
+          if (!id) {
+            id = await createConversation(user.uid, titleFromMessage(value));
+            convIdRef.current = id;
+            navigate({ to: "/chat", search: { c: id }, replace: true });
+          }
+          await addMessage({
+            conversationId: id,
+            userId: user.uid,
+            role: "user",
+            content: value,
+          });
+          await new Promise((r) => window.setTimeout(r, 1400));
+          await addMessage({
+            conversationId: id,
+            userId: user.uid,
+            role: "assistant",
+            content: reply,
+          });
+        } else {
+          await new Promise((r) => window.setTimeout(r, 1400));
+        }
+      } catch (e) {
+        setError(readableError(e));
+      }
+
+      setMessages((m) => [
+        ...m,
+        { id: crypto.randomUUID(), role: "assistant", content: reply },
       ]);
       setIsTyping(false);
-    }, 1400);
-  };
+    },
+    [navigate, user],
+  );
 
-  const reset = () =>
+  const reset = () => {
+    convIdRef.current = undefined;
+    setError(null);
     setMessages(initialMessages);
+    navigate({ to: "/chat", search: {}, replace: true });
+  };
 
   return (
     <div className="relative min-h-[100dvh] bg-gradient-hero">
@@ -224,6 +310,18 @@ function ChatPage() {
                 </MessageContent>
               </Message>
             )}
+
+            {(loadingHistory || (authLoading && conversationId)) && (
+              <p className="pt-2 text-center text-[12px] text-muted-foreground">
+                Loading conversation…
+              </p>
+            )}
+
+            {error && (
+              <p className="rounded-2xl bg-destructive/10 px-4 py-3 text-center text-[12px] text-destructive">
+                {error}
+              </p>
+            )}
           </ConversationContent>
         </Conversation>
 
@@ -293,6 +391,17 @@ function ChatPage() {
 }
 
 function TypingDots() {
+  return <TypingDotsInner />;
+}
+
+function readableError(e: unknown): string {
+  const err = e as { code?: string; message?: string };
+  if (err?.code === "permission-denied")
+    return "You don't have access to this conversation.";
+  return err?.code ?? err?.message ?? "Something went wrong. Please try again.";
+}
+
+function TypingDotsInner() {
   return (
     <div className="flex items-center gap-1.5 py-0.5" aria-label="Love AI is typing">
       {[0, 1, 2].map((i) => (
