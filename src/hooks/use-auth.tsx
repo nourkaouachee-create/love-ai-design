@@ -16,7 +16,7 @@ import {
   signOut as fbSignOut,
   type User,
 } from "firebase/auth";
-import { doc, getDoc, serverTimestamp, setDoc } from "firebase/firestore";
+import { doc, getDoc, serverTimestamp, setDoc, updateDoc } from "firebase/firestore";
 import { getDb, getFirebaseAuth } from "@/lib/firebase";
 import { COLLECTIONS, defaultUserDoc } from "@/lib/firestore-schema";
 
@@ -35,7 +35,11 @@ const AuthContext = createContext<AuthContextValue | null>(null);
 async function ensureUserDoc(user: User) {
   const ref = doc(getDb(), COLLECTIONS.users, user.uid);
   const snap = await getDoc(ref);
-  if (snap.exists()) return;
+  if (snap.exists()) {
+    // Existing user: only touch lastLoginAt, never overwrite profile data.
+    await updateDoc(ref, { lastLoginAt: serverTimestamp() });
+    return;
+  }
   await setDoc(ref, {
     ...defaultUserDoc({
       uid: user.uid,
@@ -44,6 +48,7 @@ async function ensureUserDoc(user: User) {
       photoURL: user.photoURL,
     }),
     createdAt: serverTimestamp(),
+    lastLoginAt: serverTimestamp(),
   });
 }
 

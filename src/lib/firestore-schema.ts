@@ -23,6 +23,7 @@ export interface UserDoc {
   memoryEnabled: boolean;
   dailyMessages: number;
   createdAt: Timestamp;
+  lastLoginAt: Timestamp;
 }
 
 /** conversations/{conversationId} */
@@ -46,7 +47,7 @@ export interface MessageDoc {
 
 export const defaultUserDoc = (
   params: Pick<UserDoc, "uid" | "displayName" | "email" | "photoURL">,
-): Omit<UserDoc, "createdAt"> => ({
+): Omit<UserDoc, "createdAt" | "lastLoginAt"> => ({
   ...params,
   language: "en",
   subscription: "free",
