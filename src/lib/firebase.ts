@@ -1,7 +1,6 @@
 import { initializeApp, getApps, getApp, type FirebaseApp } from "firebase/app";
 import { getAuth, type Auth } from "firebase/auth";
 import { getFirestore, type Firestore } from "firebase/firestore";
-import { getStorage, type FirebaseStorage } from "firebase/storage";
 
 // Firebase web config values are publishable (safe in client code).
 // TODO: migrate to VITE_* env vars later.
@@ -31,6 +30,11 @@ export function getDb(): Firestore {
   return getFirestore(getFirebaseApp());
 }
 
-export function getFirebaseStorage(): FirebaseStorage {
+/**
+ * Firebase Storage is NOT required by the app (Spark plan has it disabled).
+ * Kept ready for later: the SDK is only loaded when this is actually called.
+ */
+export async function getFirebaseStorage() {
+  const { getStorage } = await import("firebase/storage");
   return getStorage(getFirebaseApp());
 }
