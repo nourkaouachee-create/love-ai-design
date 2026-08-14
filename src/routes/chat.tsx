@@ -84,6 +84,11 @@ function ChatPage() {
   const [loadingHistory, setLoadingHistory] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const convIdRef = useRef<string | undefined>(conversationId);
+  const messagesRef = useRef<ChatMessage[]>(initialMessages);
+
+  useEffect(() => {
+    messagesRef.current = messages;
+  }, [messages]);
 
   useEffect(() => {
     convIdRef.current = conversationId;
