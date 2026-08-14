@@ -36,9 +36,8 @@ import {
 import { generateLoveAiReply } from "@/lib/chat-ai.functions";
 
 export const Route = createFileRoute("/chat")({
-  validateSearch: (search: Record<string, unknown>) => ({
-    c: typeof search.c === "string" && search.c ? search.c : undefined,
-  }),
+  validateSearch: (search: Record<string, unknown>): { c?: string } =>
+    typeof search.c === "string" && search.c ? { c: search.c } : {},
   head: () => ({
     meta: [
       { title: "Chat — Love AI" },
