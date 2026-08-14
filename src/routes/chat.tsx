@@ -127,6 +127,10 @@ function ChatPage() {
     async (text: string) => {
       const value = text.trim();
       if (!value) return;
+      const historyForModel = messagesRef.current
+        .filter((m) => m.id !== "welcome")
+        .slice(-20)
+        .map((m) => ({ role: m.role, content: m.content }));
       setMessages((m) => [
         ...m,
         { id: crypto.randomUUID(), role: "user", content: value },
@@ -135,12 +139,9 @@ function ChatPage() {
       setIsTyping(true);
       setError(null);
 
-      const reply =
-        "Thank you for sharing. I'm here to listen — this is a placeholder response while we build the AI.";
-
       try {
+        let id = convIdRef.current;
         if (user) {
-          let id = convIdRef.current;
           if (!id) {
             id = await createConversation(user.uid, titleFromMessage(value));
             convIdRef.current = id;
@@ -152,24 +153,29 @@ function ChatPage() {
             role: "user",
             content: value,
           });
-          await new Promise((r) => window.setTimeout(r, 1400));
+        }
+
+        const { text: reply } = await generateLoveAiReply({
+          data: { messages: [...historyForModel, { role: "user", content: value }] },
+        });
+
+        if (user && id) {
           await addMessage({
             conversationId: id,
             userId: user.uid,
             role: "assistant",
             content: reply,
           });
-        } else {
-          await new Promise((r) => window.setTimeout(r, 1400));
         }
+
+        setMessages((m) => [
+          ...m,
+          { id: crypto.randomUUID(), role: "assistant", content: reply },
+        ]);
       } catch (e) {
         setError(readableError(e));
       }
 
-      setMessages((m) => [
-        ...m,
-        { id: crypto.randomUUID(), role: "assistant", content: reply },
-      ]);
       setIsTyping(false);
     },
     [navigate, user],
