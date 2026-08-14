@@ -409,7 +409,9 @@ function readableError(e: unknown): string {
   const err = e as { code?: string; message?: string };
   if (err?.code === "permission-denied")
     return "You don't have access to this conversation.";
-  return err?.code ?? err?.message ?? "Something went wrong. Please try again.";
+  // Only surface messages we produced ourselves — never raw backend/provider text.
+  if (err?.message?.startsWith("Love AI")) return err.message;
+  return "Something went wrong. Please try again.";
 }
 
 function TypingDotsInner() {
