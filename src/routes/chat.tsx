@@ -33,6 +33,7 @@ import {
   listMessages,
   titleFromMessage,
 } from "@/lib/chat-store";
+import { generateLoveAiReply } from "@/lib/chat-ai.functions";
 
 export const Route = createFileRoute("/chat")({
   validateSearch: (search: Record<string, unknown>) => ({
