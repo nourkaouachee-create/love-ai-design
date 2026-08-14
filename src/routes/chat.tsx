@@ -33,11 +33,11 @@ import {
   listMessages,
   titleFromMessage,
 } from "@/lib/chat-store";
+import { generateLoveAiReply } from "@/lib/chat-ai.functions";
 
 export const Route = createFileRoute("/chat")({
-  validateSearch: (search: Record<string, unknown>) => ({
-    c: typeof search.c === "string" && search.c ? search.c : undefined,
-  }),
+  validateSearch: (search: Record<string, unknown>): { c?: string } =>
+    typeof search.c === "string" && search.c ? { c: search.c } : {},
   head: () => ({
     meta: [
       { title: "Chat — Love AI" },
@@ -84,6 +84,11 @@ function ChatPage() {
   const [loadingHistory, setLoadingHistory] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const convIdRef = useRef<string | undefined>(conversationId);
+  const messagesRef = useRef<ChatMessage[]>(initialMessages);
+
+  useEffect(() => {
+    messagesRef.current = messages;
+  }, [messages]);
 
   useEffect(() => {
     convIdRef.current = conversationId;
@@ -127,6 +132,10 @@ function ChatPage() {
     async (text: string) => {
       const value = text.trim();
       if (!value) return;
+      const historyForModel = messagesRef.current
+        .filter((m) => m.id !== "welcome")
+        .slice(-20)
+        .map((m) => ({ role: m.role, content: m.content }));
       setMessages((m) => [
         ...m,
         { id: crypto.randomUUID(), role: "user", content: value },
@@ -135,12 +144,9 @@ function ChatPage() {
       setIsTyping(true);
       setError(null);
 
-      const reply =
-        "Thank you for sharing. I'm here to listen — this is a placeholder response while we build the AI.";
-
       try {
+        let id = convIdRef.current;
         if (user) {
-          let id = convIdRef.current;
           if (!id) {
             id = await createConversation(user.uid, titleFromMessage(value));
             convIdRef.current = id;
@@ -152,24 +158,29 @@ function ChatPage() {
             role: "user",
             content: value,
           });
-          await new Promise((r) => window.setTimeout(r, 1400));
+        }
+
+        const { text: reply } = await generateLoveAiReply({
+          data: { messages: [...historyForModel, { role: "user", content: value }] },
+        });
+
+        if (user && id) {
           await addMessage({
             conversationId: id,
             userId: user.uid,
             role: "assistant",
             content: reply,
           });
-        } else {
-          await new Promise((r) => window.setTimeout(r, 1400));
         }
+
+        setMessages((m) => [
+          ...m,
+          { id: crypto.randomUUID(), role: "assistant", content: reply },
+        ]);
       } catch (e) {
         setError(readableError(e));
       }
 
-      setMessages((m) => [
-        ...m,
-        { id: crypto.randomUUID(), role: "assistant", content: reply },
-      ]);
       setIsTyping(false);
     },
     [navigate, user],
@@ -398,7 +409,9 @@ function readableError(e: unknown): string {
   const err = e as { code?: string; message?: string };
   if (err?.code === "permission-denied")
     return "You don't have access to this conversation.";
-  return err?.code ?? err?.message ?? "Something went wrong. Please try again.";
+  // Only surface messages we produced ourselves — never raw backend/provider text.
+  if (err?.message?.startsWith("Love AI")) return err.message;
+  return "Something went wrong. Please try again.";
 }
 
 function TypingDotsInner() {
