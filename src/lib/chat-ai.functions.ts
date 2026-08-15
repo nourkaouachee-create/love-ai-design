@@ -11,11 +11,14 @@ const ChatInput = z.object({
     )
     .min(1)
     .max(30),
+  idToken: z.string().max(8192).optional(),
 });
 
 export const generateLoveAiReply = createServerFn({ method: "POST" })
   .inputValidator((input: unknown) => ChatInput.parse(input))
   .handler(async ({ data }) => {
     const { runLoveAiChat } = await import("./love-ai.server");
-    return runLoveAiChat(data.messages);
+    const { getUserLanguage } = await import("./user-language.server");
+    const language = await getUserLanguage(data.idToken);
+    return runLoveAiChat(data.messages, language);
   });
