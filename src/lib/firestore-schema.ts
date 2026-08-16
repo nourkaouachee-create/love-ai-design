@@ -4,6 +4,7 @@ import type { Timestamp } from "firebase/firestore";
 
 export const COLLECTIONS = {
   users: "users",
+  memories: "memories",
   conversations: "conversations",
   messages: "messages",
 } as const;
