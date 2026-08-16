@@ -33,6 +33,12 @@ import {
 } from "@/components/ui/alert-dialog";
 import { useAuth } from "@/hooks/use-auth";
 import {
+  clearUserMemories,
+  deleteUserMemory,
+  listUserMemories,
+  type MemoryItem,
+} from "@/lib/memory-store";
+import {
   deleteUserAccount,
   fetchUserProfile,
   updateUserProfile,
@@ -99,6 +105,46 @@ function ProfilePage() {
   const [nameDraft, setNameDraft] = useState("");
   const [saving, setSaving] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [memories, setMemories] = useState<MemoryItem[]>([]);
+  const [memoriesLoading, setMemoriesLoading] = useState(false);
+
+  useEffect(() => {
+    if (!user) return;
+    let cancelled = false;
+    setMemoriesLoading(true);
+    listUserMemories(user.uid)
+      .then((m) => !cancelled && setMemories(m))
+      .catch(() => undefined)
+      .finally(() => !cancelled && setMemoriesLoading(false));
+    return () => {
+      cancelled = true;
+    };
+  }, [user]);
+
+  const removeMemory = async (id: string) => {
+    if (!user) return;
+    const previous = memories;
+    setMemories((m) => m.filter((x) => x.id !== id));
+    try {
+      await deleteUserMemory(user.uid, id);
+    } catch {
+      setMemories(previous);
+      setError("We couldn't delete that memory. Please try again.");
+    }
+  };
+
+  const clearMemories = async () => {
+    if (!user) return;
+    const previous = memories;
+    setMemories([]);
+    try {
+      await clearUserMemories(user.uid);
+      setNotice("All memories cleared.");
+    } catch {
+      setMemories(previous);
+      setError("We couldn't clear your memories. Please try again.");
+    }
+  };
 
   useEffect(() => {
     if (authLoading) return;
