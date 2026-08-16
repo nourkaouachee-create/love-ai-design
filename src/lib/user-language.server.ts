@@ -4,7 +4,7 @@
  * accepted from the client, so it cannot be overridden.
  */
 
-const PROJECT_ID = "love-ai-b5e26";
+export const PROJECT_ID = "love-ai-b5e26";
 const FIREBASE_API_KEY = "AIzaSyC25_myzSkpjkYaR28RA0CmqfJzHiGI8rQ";
 
 export type LoveAiLanguage = "en" | "fr" | "ar";
@@ -18,7 +18,7 @@ export const LANGUAGE_INSTRUCTIONS: Record<LoveAiLanguage, string> = {
 };
 
 /** Verify a Firebase ID token and return its uid, or null when invalid. */
-async function verifyIdToken(idToken: string): Promise<string | null> {
+export async function verifyIdToken(idToken: string): Promise<string | null> {
   try {
     const res = await fetch(
       `https://identitytoolkit.googleapis.com/v1/accounts:lookup?key=${FIREBASE_API_KEY}`,
@@ -58,5 +58,38 @@ export async function getUserLanguage(idToken?: string): Promise<LoveAiLanguage>
     return LANGUAGES.includes(value as LoveAiLanguage) ? (value as LoveAiLanguage) : "en";
   } catch {
     return "en";
+  }
+}
+
+/**
+ * Single authenticated read of users/{uid}: language + memoryEnabled + uid.
+ * Uses the caller's own token so Firestore rules still apply.
+ */
+export async function getUserSettings(
+  idToken?: string,
+): Promise<{ uid: string | null; language: LoveAiLanguage; memoryEnabled: boolean }> {
+  if (!idToken) return { uid: null, language: "en", memoryEnabled: false };
+  const uid = await verifyIdToken(idToken);
+  if (!uid) return { uid: null, language: "en", memoryEnabled: false };
+  try {
+    const res = await fetch(
+      `https://firestore.googleapis.com/v1/projects/${PROJECT_ID}/databases/(default)/documents/users/${encodeURIComponent(uid)}`,
+      { headers: { Authorization: `Bearer ${idToken}` } },
+    );
+    if (!res.ok) return { uid, language: "en", memoryEnabled: false };
+    const json = (await res.json()) as {
+      fields?: {
+        language?: { stringValue?: string };
+        memoryEnabled?: { booleanValue?: boolean };
+      };
+    };
+    const value = json.fields?.language?.stringValue;
+    return {
+      uid,
+      language: LANGUAGES.includes(value as LoveAiLanguage) ? (value as LoveAiLanguage) : "en",
+      memoryEnabled: json.fields?.memoryEnabled?.booleanValue === true,
+    };
+  } catch {
+    return { uid, language: "en", memoryEnabled: false };
   }
 }
