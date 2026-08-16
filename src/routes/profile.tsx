@@ -495,6 +495,77 @@ function ProfilePage() {
         </div>
       </Section>
 
+      {/* Manage Memory */}
+      <Section title="Manage Memory">
+        <div className="p-5">
+          <div className="flex items-start justify-between gap-3">
+            <p className="text-xs leading-relaxed text-muted-foreground">
+              {profile?.memoryEnabled === false
+                ? "Memory is off — nothing new is saved or used in chats."
+                : "Details Love AI keeps to personalize future chats."}
+            </p>
+            {memories.length > 0 && (
+              <AlertDialog>
+                <AlertDialogTrigger asChild>
+                  <Button variant="ghost" size="sm" className="shrink-0 text-destructive">
+                    Clear all
+                  </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent className="rounded-3xl">
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>Clear all memories?</AlertDialogTitle>
+                    <AlertDialogDescription>
+                      Love AI will forget everything it has saved about you. This can't be undone.
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel className="rounded-2xl">Cancel</AlertDialogCancel>
+                    <AlertDialogAction
+                      className="rounded-2xl bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                      onClick={clearMemories}
+                    >
+                      Clear all
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
+            )}
+          </div>
+
+          <div className="mt-4 space-y-2">
+            {memoriesLoading ? (
+              <Skeleton className="h-12 w-full rounded-2xl" />
+            ) : memories.length === 0 ? (
+              <p className="rounded-2xl bg-white/70 px-4 py-3 text-xs text-muted-foreground">
+                No memories saved yet.
+              </p>
+            ) : (
+              memories.map((m) => (
+                <div
+                  key={m.id}
+                  className="flex items-start gap-3 rounded-2xl bg-white/70 px-4 py-3"
+                >
+                  <div className="min-w-0 flex-1">
+                    <p className="text-xs leading-relaxed text-foreground">{m.content}</p>
+                    <p className="mt-1 text-[10px] uppercase tracking-wider text-muted-foreground">
+                      {m.category}
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    aria-label="Delete memory"
+                    onClick={() => removeMemory(m.id)}
+                    className="shrink-0 rounded-full p-1.5 text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive"
+                  >
+                    <Trash2 className="size-4" />
+                  </button>
+                </div>
+              ))
+            )}
+          </div>
+        </div>
+      </Section>
+
       {/* Account */}
       <Section title="Account">
         <div className="divide-y divide-white/70">
