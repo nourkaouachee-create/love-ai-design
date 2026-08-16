@@ -1,11 +1,15 @@
 import { streamText } from "ai";
 import { createLovableAiGatewayProvider } from "./ai-gateway.server";
 import { LOVE_AI_SYSTEM_PROMPT } from "./love-ai-prompt.server";
+import { LANGUAGE_INSTRUCTIONS, type LoveAiLanguage } from "./user-language.server";
 
 export type LoveAiTurn = { role: "user" | "assistant"; content: string };
 
 /** Errors thrown here are already user-safe: no provider details, no key material. */
-export async function runLoveAiChat(messages: LoveAiTurn[]): Promise<{ text: string }> {
+export async function runLoveAiChat(
+  messages: LoveAiTurn[],
+  language: LoveAiLanguage = "en",
+): Promise<{ text: string }> {
   const apiKey = process.env["LOVABLE_API_KEY"];
   if (!apiKey) {
     console.error("LOVABLE_API_KEY is not configured");
@@ -17,7 +21,7 @@ export async function runLoveAiChat(messages: LoveAiTurn[]): Promise<{ text: str
   try {
     const result = streamText({
       model: gateway("google/gemini-3.6-flash"),
-      system: LOVE_AI_SYSTEM_PROMPT,
+      system: `${LOVE_AI_SYSTEM_PROMPT}\n\nLanguage rule (highest priority, overrides any earlier language guidance):\n${LANGUAGE_INSTRUCTIONS[language]}`,
       messages,
     });
 

@@ -161,7 +161,10 @@ function ChatPage() {
         }
 
         const { text: reply } = await generateLoveAiReply({
-          data: { messages: [...historyForModel, { role: "user", content: value }] },
+          data: {
+            messages: [...historyForModel, { role: "user", content: value }],
+            idToken: user ? await user.getIdToken() : undefined,
+          },
         });
 
         if (user && id) {
