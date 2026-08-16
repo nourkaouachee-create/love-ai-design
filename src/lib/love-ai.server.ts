@@ -9,6 +9,7 @@ export type LoveAiTurn = { role: "user" | "assistant"; content: string };
 export async function runLoveAiChat(
   messages: LoveAiTurn[],
   language: LoveAiLanguage = "en",
+  memories: string[] = [],
 ): Promise<{ text: string }> {
   const apiKey = process.env["LOVABLE_API_KEY"];
   if (!apiKey) {
@@ -18,10 +19,16 @@ export async function runLoveAiChat(
 
   const gateway = createLovableAiGatewayProvider(apiKey);
 
+  const memoryBlock = memories.length
+    ? `\n\nWhat you remember about this user (use naturally, only when relevant; never list it back):\n${memories
+        .map((m) => `- ${m}`)
+        .join("\n")}`
+    : "";
+
   try {
     const result = streamText({
       model: gateway("google/gemini-3.6-flash"),
-      system: `${LOVE_AI_SYSTEM_PROMPT}\n\nLanguage rule (highest priority, overrides any earlier language guidance):\n${LANGUAGE_INSTRUCTIONS[language]}`,
+      system: `${LOVE_AI_SYSTEM_PROMPT}${memoryBlock}\n\nLanguage rule (highest priority, overrides any earlier language guidance):\n${LANGUAGE_INSTRUCTIONS[language]}`,
       messages,
     });
 

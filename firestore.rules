@@ -10,6 +10,11 @@ service cloud.firestore {
     match /users/{uid} {
       allow read, create, update: if signedIn() && request.auth.uid == uid;
       allow delete: if false;
+
+      // users/{uid}/memories/{memoryId} — private to the owner
+      match /memories/{memoryId} {
+        allow read, create, update, delete: if signedIn() && request.auth.uid == uid;
+      }
     }
 
     // conversations/{conversationId}
